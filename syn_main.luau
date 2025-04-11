@@ -138,3 +138,5 @@ function syn.setreadonly(tb, option: boolean)
  if env.setreadonly or setreadonly then return env.setreadonly(tb, option) or setreadonly(tb, option) end
     return NULL
 end
+
+return syn
