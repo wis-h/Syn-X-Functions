@@ -19,7 +19,7 @@
 
 local syn = {
   is_Beta = true,
-  Cached: table = {},
+  Cached = {},
   insert = function(a, b, c, d)
      table.insert(a,b)
      table.insert(c,d)
