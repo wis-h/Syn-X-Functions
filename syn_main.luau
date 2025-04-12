@@ -91,9 +91,11 @@ end
 
 if type(env.crypt) == 'table' or type(crypt) == 'table' then syn.crypt = env.crypt or crypt else return NULL end -- i am not completing the rest.
 
-function syn.secure_call(...)
+function syn.secure_call(func)
     local new_game = newproxy(true)
+    local environment = getfenv(func)
     local game_mt = getmetatable(new_game)
+
     game_mt.__index = function(_, key)
         if key == 'GetService' then
             return function(_, ...)
@@ -106,12 +108,14 @@ function syn.secure_call(...)
         end
     end
 
-    getfenv(...).getgenv = nil;
-    getfenv(...).game = new_game
-    getfenv().getfenv = nil;
-    
+    environment.getgenv = nil
+    environment.getfenv = nil
+    environment.game = new_game
+
+    setfenv(func, environment)
     return new_game
 end
+
 
 
 function syn.create_secure_function(arg) -- this is an inaccurate way to do it, these should be done internally.
