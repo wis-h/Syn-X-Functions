@@ -34,13 +34,7 @@ local env = getfenv()
 function PROTOSMASHER_LOADED() return syn.is_Beta end -- or return true;
 
 function is_syn_function(func) -- needed for whatever
-  if syn[func] then
-    return true
-  else
-    return false
-  end
-  
-  return true
+  return type(func) == 'function' or syn.is_Beta
 end
 function syn_isbeta() return syn.is_Beta end
 
