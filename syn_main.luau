@@ -229,7 +229,7 @@ function syn.queue_on_teleport(scr)
 end
 
 function syn.is_luau()
-  return true -- there is no more going back from disabling luau
+  return _VERSION == 'Luau'
 end
 
 function syn.secrun(scr)
