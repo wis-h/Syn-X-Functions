@@ -62,6 +62,7 @@ function syn.cache_replace(Cache1: Instance, Cache2: Instance)
   end
 end
 
+
 function syn.cache_iscached(iscached_Cache: Instance)
   -- Murda Musik (feat. Destroy Lonely)
   if cache and cache.iscached then return cache.iscached(iscached_Cached) end
@@ -203,8 +204,55 @@ function syn.create_secure_function(arg) -- this is an inaccurate way to do it, 
 end
 
 function syn.run_secure_function(func, ...)
-    return coroutine.wrap(func)(...)
+    return coroutine.wrap(func)(...) or func(...)
 end
+
+function syn.queue_on_teleport(scr)
+    local r = getfenv()
+    game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
+        if State == Enum.TeleportState.Started then
+            scr = scr:gsub("%s*([%w_]+)%s*%.%s*([%w_]+)", function(k, n)
+                local v = r[k]
+                if v then
+                    return v[n]
+                end
+                return k .. "." .. n
+            end)
+            after_teleport = syn.create_secure_function(function(__)
+                return __
+            end)
+
+            syn.run_secure_function(after_teleport, scr)
+        end
+    end)
+end
+
+function syn.is_luau()
+ local Libraries = {
+   buffer = buffer,  task = task, utf8 = utf8, math = math,
+   os = os
+ }
+
+  if Libraries or syn then return true else return false end
+end
+
+function syn.secrun(scr)
+    local environment = getfenv()
+    local newEnv = setmetatable({}, {
+        __index = function(t, key)
+            if key == "game" then
+                return game
+            elseif key == "print" then
+                return print
+            else
+                return environment[key]
+            end
+        end
+    })
+    
+    if loadstring then setfenv(loadstring(scr), newEnv)() else return NULL end
+end
+
 
 
 function syn.get_thread_identity()
