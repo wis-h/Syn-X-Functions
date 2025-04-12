@@ -116,6 +116,81 @@ function syn.secure_call(target_func, fake_script, ...)
     return target_func(...) -- my work here is done
 end
 
+function syn.create_secure_vm(fake_script)
+    local new_game = newproxy(true)
+    local game_mt = getmetatable(new_game)
+
+    game_mt.__index = function(_, key)
+        if key == 'GetService' then
+            return function(_, ...)
+                return game:GetService(...)
+            end
+        elseif key == 'HttpGet' or key == 'HttpPost' or key == 'HttpGetAsync' or key == 'HttpPostAsync' then
+            return function() return nil end
+        else
+            return game[key]
+        end
+    end
+
+    local env = {}
+    local base_env = getfenv(0)
+
+    for k, v in pairs(base_env) do
+        env[k] = v
+    end
+
+    env.game = new_game
+    env.script = fake_script
+    env.getgenv = nil
+    env.getfenv = function()
+        return getfenv(0)
+    end
+    env.setfenv = setfenv
+    env.setmetatable = setmetatable
+    env.getmetatable = getmetatable
+
+    return env
+end
+
+function syn.protect_gui(gui)
+    if not gui:IsA("GuiObject") then
+        return
+    end
+
+    local fake_script = game.Players.LocalPlayer.Character:WaitForChild("Animate")
+    local secure_env = syn.create_secure_vm(fake_script)
+
+    gui:SetAttribute("SynapseProtected", true)
+
+    local game_mt = getmetatable(gui)
+    local original_index = game_mt.__index
+    game_mt.__index = function(t, key)
+        if key == "FindFirstChild" or key == "GetChildren" or key == "GetDescendants" then
+            return function() return nil end
+        end
+        return original_index(t, key)
+    end
+
+    setfenv(function() return gui end, secure_env)
+end
+
+function syn.unprotect_gui(gui)
+    if not gui:IsA("GuiObject") then
+        return
+    end
+
+    local game_mt = getmetatable(gui)
+    local original_index = game_mt.__index
+
+    if original_index == function(t, key)
+        if key == "FindFirstChild" or key == "GetChildren" or key == "GetDescendants" then
+            return nil
+        end
+        return original_index(t, key)
+    end then
+        game_mt.__index = original_index
+    end
+end
 
 
 
