@@ -276,7 +276,7 @@ end
 function syn.kill_process()
   -- you cannot do this in lua, so just make them exit the game [some exploits have game:Shutdown() blocked, so just pcall it]
   local a,b = pcall(function() return game:Shutdown() end
-  if not a then return NULL else game:Shutdown() end
+  if not a then return NULL end
 end
 
 function syn.isreadonly(main: table): boolean
