@@ -39,6 +39,7 @@ function PROTOSMASHER_LOADED() return syn.is_Beta end -- or return true;
 function is_syn_function(func) -- needed for whatever
 	return type(func) == 'function' or syn.is_Beta
 end
+is_synapse_function = is_syn_function
 function syn_isbeta() return syn.is_Beta end
 
 function syn.checkcaller()
