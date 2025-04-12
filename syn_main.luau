@@ -91,9 +91,9 @@ end
 
 if type(env.crypt) == 'table' or type(crypt) == 'table' then syn.crypt = env.crypt or crypt else return NULL end -- i am not completing the rest.
 
-function syn.secure_call(func)
-    local new_game = newproxy(true)
-    local environment = getfenv(func)
+function syn.secure_call(target_func, fake_script, ...)
+    local new_game = newproxy(true) -- create a sandboxed proxy (for the skids: userdata = newproxy(true))
+    local env = getfenv(target_func)
     local game_mt = getmetatable(new_game)
 
     game_mt.__index = function(_, key)
@@ -102,19 +102,26 @@ function syn.secure_call(func)
                 return game.GetService(game, ...)
             end
         elseif key == 'HttpGet' or key == 'HttpPost' or key == 'HttpGetAsync' or key == 'HttpPostAsync' then
-            return function() return nil end
+            return function() return nil end -- game proxy with no httpget or http requesting related stuff
         else
             return game[key]
         end
     end
 
-    environment.getgenv = nil
-    environment.getfenv = nil
-    environment.game = new_game
+    env.getgenv = nil
 
-    setfenv(func, environment)
-    return new_game
+    env.getfenv = function()
+        return getfenv(0)
+    end
+
+    env.script = fake_script -- make the called script a fake one 
+    env.game = new_game -- change the caller's environment to the proxied game
+
+    setfenv(target_func, env)
+
+    return target_func(...) -- my work here is done
 end
+
 
 
 
