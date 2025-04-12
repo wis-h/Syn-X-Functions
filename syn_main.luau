@@ -158,135 +158,112 @@ function syn.create_secure_vm(fake_script)
 	return env
 end
 
-function syn.protect_gui(gui)
-	if not gui:IsA("ScreenGui") or not gui:IsA("Frame") then
-		error("[ SYN.PROTECT_GUI ]: expected a screengui or frame for 1st argument, got "..gui.ClassName..".", 2)
-	end
 
-	local fake_script = game.Players.LocalPlayer.Character:WaitForChild("Animate")
-	local secure_env = syn.create_secure_vm(fake_script)
-
-	-- gui:SetAttribute("SynapseProtected", true) ?? this can be literally detected by just doing
-	-- if gui:GetAttribute("SynapseProtected") then game.Players.LocalPlayer:Kick("stupid detect") end
-
-	local game_mt = getmetatable(gui)
-	local original_index = game_mt.__index
-	game_mt.__index = function(t, key)
-		if key == "FindFirstChild" or key == "GetChildren" or key == "GetDescendants" then
-			return function() return nil end
-		end
-		return original_index(t, key)
-	end
-
-	setfenv(function() return gui end, secure_env)
-end
-
-function syn.unprotect_gui(gui)
-	if not gui:IsA("ScreenGui") or not gui:IsA("Frame") then
-		error("[ SYN.UNPROTECT_GUI ]: expected a screengui or frame for 1st argument, got "..gui.ClassName..".", 2)
-	end
-
-	local game_mt = getmetatable(gui)
-	local original_index = game_mt.__index
-
-	if original_index == function(t, key)
-			if key == "FindFirstChild" or key == "GetChildren" or key == "GetDescendants" then
-				return nil
-			end
-			return original_index(t, key)
-		end then
-		game_mt.__index = original_index
-	end
-end
-
-
-
-function syn.create_secure_function(arg) -- this is an inaccurate way to do it, these should be done internally.
-	return coroutine.wrap(function(...)
-		while true do
-			return coroutine.yield(arg(...)) -- keep yielding so the coroutine can be called every 1 nanosecond or so
-		end
-	end)
-end
 
 function syn.run_secure_function(func, ...)
-	return coroutine.wrap(func)(...) or func(...)
+	return coroutine.wrap(func)(...)
 end
 
-function syn.queue_on_teleport(scr)
-	local r = getfenv()
-	game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
-		if State == Enum.TeleportState.Started then
-			scr = scr:gsub("%s*([%w_]+)%s*%.%s*([%w_]+)", function(k, n)
-				local v = r[k]
-				if v then
-					return v[n]
-				end
-				return k .. "." .. n
-			end)
-			local after_teleport = syn.create_secure_function(function(__)
-				return __
-			end)
+function syn.create_secure_function(arg)
+	assert(type(arg) == 'function', 'expected a function, got ' .. type(arg))
+	table.insert(syn, {func = arg})
 
-			syn.run_secure_function(after_teleport, scr)
-		end
-	end)
-end
+	local proxied_game = newproxy(true)
+	local proxiedMt = getmetatable(proxied_game)
 
-function syn.is_luau()
-	return _VERSION == 'Luau'
-end
-
-function syn.secrun(scr)
-	local environment = getfenv()
-	local newEnv = setmetatable({}, {
-		__index = function(t, key)
-			if key == "game" then
-				return game
-			elseif key == "print" then
-				return print
-			else
-				return environment[key]
+	proxiedMt.__index = function(_, key)
+		if key == 'GetService' then
+			return function(_, ...)
+				return game.GetService(game, ...)
 			end
+		elseif key == 'HttpGet' or key == 'HttpPost' or key == 'HttpGetAsync' or key == 'HttpPostAsync' then
+			return function(...) return error("Cannot send http requests while being in a SynapseProtected Sandbox") end
 		end
-	})
+		return game[key]
+	end
 
-	if loadstring then setfenv(loadstring(scr), newEnv)() else return NULL end
+	local env = getfenv(arg)
+	env.game = proxied_game
+	env.getfenv = function() return getfenv(0) end
+
+	return arg
 end
 
+	function syn.queue_on_teleport(scr)
+		local r = getfenv()
+		game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
+			if State == Enum.TeleportState.Started then
+				scr = scr:gsub("%s*([%w_]+)%s*%.%s*([%w_]+)", function(k, n)
+					local v = r[k]
+					if v then
+						return v[n]
+					end
+					return k .. "." .. n
+				end)
+				local after_teleport = syn.create_secure_function(function(__)
+					return __
+				end)
+
+				syn.run_secure_function(after_teleport, scr)
+			end
+		end)
+	end
+
+	function syn.is_luau()
+		return _VERSION == 'Luau'
+	end
+
+	function syn.secrun(scr)
+		local environment = getfenv()
+		local newEnv = setmetatable({}, {
+			__index = function(t, key)
+				if key == "game" then
+					return game
+				elseif key == "print" then
+					return print
+				else
+					return environment[key]
+				end
+			end
+		})
+
+		if loadstring then setfenv(loadstring(scr), newEnv)() else return NULL end
+	end
 
 
-function syn.get_thread_identity()
-	return tonumber(identity)
-end
 
-function syn.set_thread_identity(new)
-	identity = new
-end
+	function syn.get_thread_identity()
+		return tonumber(identity)
+	end
 
-function syn.toast_notification(T: string, T2: string, image)
-	game.GetService(game, 'StarterGui'):SetCore("SendNotification", {
-		Title = T,
-		Text = T2,
-		Icon = image or NULL
-	})
-	-- Reminder: This is a synapse z function
-end
+	function syn.set_thread_identity(new)
+		identity = new
+	end
 
-function syn.kill_process()
-	-- you cannot do this in lua, so just make them exit the game [some exploits have game:Shutdown() blocked, so just pcall it]
-	local a,b = pcall(function() return game:Shutdown() end)
-	if not a then return NULL end
-end
+	function syn.toast_notification(T: string, T2: string, image)
+		game.GetService(game, 'StarterGui'):SetCore("SendNotification", {
+			Title = T,
+			Text = T2,
+			Icon = image or NULL
+		})
+		-- Reminder: This is a synapse z function
+	end
 
-function syn.isreadonly(main: table): boolean
-	-- hi
-	if env.isreaadonly or isreadonly then return isreadonly(main) else return table.isfrozen(main) end
-end
+	function syn.kill_process()
+		-- you cannot do this in lua, so just make them exit the game [some exploits have game:Shutdown() blocked, so just pcall it]
+		local a,b = pcall(function() return game:Shutdown() end)
+		if not a then return NULL end
+	end
 
-function syn.setreadonly(tb, option: boolean)
-	if env.setreadonly or setreadonly then return env.setreadonly(tb, option) or setreadonly(tb, option) end
-	return NULL
-end
 
-return syn
+	function syn.isreadonly(main: table): boolean
+		-- hi
+		if env.isreadonly or isreadonly then return isreadonly(main) else return table.isfrozen(main) end
+	end
+
+	function syn.setreadonly(tb, option: boolean)
+		if env.setreadonly or setreadonly then return env.setreadonly(tb, option) or setreadonly(tb, option) end
+		return NULL
+	end
+
+	return syn
