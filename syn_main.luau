@@ -229,12 +229,7 @@ function syn.queue_on_teleport(scr)
 end
 
 function syn.is_luau()
- local Libraries = {
-   buffer = buffer,  task = task, utf8 = utf8, math = math,
-   os = os
- }
-
-  if Libraries or syn then return true else return false end
+  return true -- there is no more going back from disabling luau
 end
 
 function syn.secrun(scr)
