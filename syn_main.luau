@@ -25,7 +25,7 @@ local syn: table = {
      table.insert(c,d)
   end,
 }
-local identity = if getidentity or getthreadidentity then getidentity() else return 0 end
+local identity = if getidentity or getthreadidentity then getidentity() else 0 end
 
 syn.__index = syn;
 local NULL = nil
