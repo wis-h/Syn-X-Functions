@@ -281,7 +281,6 @@ end
 
 function syn.isreadonly(main: table): boolean
   if env.isreadonly or isreadonly then return env.isreadonly or isreadonly else return table.isfrozen(main) end
-  return table.isfrozen(main)
 end
 
 function syn.setreadonly(tb, option: boolean)
