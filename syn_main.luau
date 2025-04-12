@@ -161,7 +161,8 @@ function syn.protect_gui(gui)
     local fake_script = game.Players.LocalPlayer.Character:WaitForChild("Animate")
     local secure_env = syn.create_secure_vm(fake_script)
 
-     -- gui:SetAttribute("SynapseProtected", true) ??
+     -- gui:SetAttribute("SynapseProtected", true) ?? this can be literally detected by just doing
+     -- if gui:GetAttribute("SynapseProtected") then game.Players.LocalPlayer:Kick("stupid detect") end
 
     local game_mt = getmetatable(gui)
     local original_index = game_mt.__index
