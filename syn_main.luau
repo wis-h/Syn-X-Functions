@@ -40,7 +40,7 @@ function is_syn_function(func) -- needed for whatever
     return false
   end
   
-  return false
+  return true
 end
 function syn_isbeta() return syn.is_Beta end
 
