@@ -154,8 +154,8 @@ function syn.create_secure_vm(fake_script)
 end
 
 function syn.protect_gui(gui)
-    if not gui:IsA("GuiObject") then
-        return
+    if not gui:IsA("ScreenGui") or not gui:IsA("Frame") then
+        error("[ SYN.PROTECT_GUI ]: expected a screengui or frame for 1st argument, got "..gui.ClassName..".", 2)
     end
 
     local fake_script = game.Players.LocalPlayer.Character:WaitForChild("Animate")
@@ -176,8 +176,8 @@ function syn.protect_gui(gui)
 end
 
 function syn.unprotect_gui(gui)
-    if not gui:IsA("GuiObject") then
-        return
+    if not gui:IsA("ScreenGui") or not gui:IsA("Frame") then
+        error("[ SYN.UNPROTECT_GUI ]: expected a screengui or frame for 1st argument, got "..gui.ClassName..".", 2)
     end
 
     local game_mt = getmetatable(gui)
