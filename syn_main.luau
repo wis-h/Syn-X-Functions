@@ -17,7 +17,7 @@
  - 1 byte of ram
 ]]
 
-local syn: table = {
+local syn = {
   is_Beta = true,
   Cached: table = {},
   insert = function(a, b, c, d)
