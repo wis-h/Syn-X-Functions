@@ -92,8 +92,27 @@ end
 if type(env.crypt) == 'table' or type(crypt) == 'table' then syn.crypt = env.crypt or crypt else return NULL end -- i am not completing the rest.
 
 function syn.secure_call(...)
-  return NULL -- cannot be done in lua
+    local new_game = newproxy(true)
+    local game_mt = getmetatable(new_game)
+    game_mt.__index = function(_, key)
+        if key == 'GetService' then
+            return function(_, ...)
+                return game.GetService(game, ...)
+            end
+        elseif key == 'HttpGet' or key == 'HttpPost' or key == 'HttpGetAsync' or key == 'HttpPostAsync' then
+            return function() return nil end
+        else
+            return game[key]
+        end
+    end
+
+    getfenv(...).getgenv = nil;
+    getfenv(...).game = new_game
+    getfenv().getfenv = nil;
+    
+    return new_game
 end
+
 
 function syn.create_secure_function(arg) -- this is an inaccurate way to do it, these should be done internally.
   return coroutine.wrap(function(...)
