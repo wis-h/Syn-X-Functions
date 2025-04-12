@@ -121,14 +121,15 @@ end
 function syn.create_secure_function(arg) -- this is an inaccurate way to do it, these should be done internally.
   return coroutine.wrap(function(...)
        while true do
-        return coroutine.yield(arg(...))
+        return coroutine.yield(arg(...)) -- keep yielding so the coroutine can be called every 1 nanosecond or so
       end
     end)
 end
 
-function syn.run_secure_function(...)
-  return coroutine.wrap(...)()
+function syn.run_secure_function(func, ...)
+    return coroutine.wrap(func)(...)
 end
+
 
 function syn.get_thread_identity()
   return tonumber(identity)
@@ -148,8 +149,9 @@ function syn.toast_notification(T: string, T2: string, image)
 end
 
 function syn.kill_process()
-  -- this cannot be done in lua of course, so just crash them lmfao..
-  while true do end
+  -- you cannot do this in lua, so just make them exit the game [some exploits have game:Shutdown() blocked, so just pcall it]
+  local a,b = pcall(function() return game:Shutdown() end
+  if not a then return NULL else game:Shutdown() end
 end
 
 function syn.isreadonly(main: table): boolean
