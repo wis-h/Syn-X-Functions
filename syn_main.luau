@@ -280,7 +280,7 @@ function syn.kill_process()
 end
 
 function syn.isreadonly(main: table): boolean
-  if env.isreadonly or isreadonly then return env.isreadonly or isreadonly else return table.isfrozen(main) end
+  if env.isreadonly or isreadonly then return env.isreadonly(main) or isreadonly(main) else return table.isfrozen(main) end
 end
 
 function syn.setreadonly(tb, option: boolean)
