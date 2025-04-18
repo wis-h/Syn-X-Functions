@@ -1,8 +1,8 @@
 --[[
- Author: RazAPIx64.dll32 or razapix64.dll32 (on Discord)
+ Author: wish or wis_h (on Discord)
  Filename: syn_main.luau
 
- Syn-X-Functions © 2025 by RazAPI is licensed under Creative Commons Attribution-NoDerivatives 4.0 International (CC BY-ND 4.0)
+ Syn-X-Functions © 2025 by wish is licensed under Creative Commons Attribution-NoDerivatives 4.0 International (CC BY-ND 4.0)
 
  You are free to use, distribute, and share the Syn-X-Functions project as long as you provide proper attribution to the original creator. 
  However, you may not modify, remix, or fork this project in any way. Redistribution of the work is only allowed in its original, unaltered form. 
@@ -18,7 +18,7 @@
 ]]
 
 local syn = {
-	is_Beta = true,
+	is_Beta = false,
 	Cached = {},
 	insert = function(a, b, c, d)
 		table.insert(a,b)
@@ -29,6 +29,7 @@ local syn = {
 local identity
 
 if getidentity then identity = getidentity else identity = nil end
+-- no
 
 syn.__index = syn;
 local NULL = nil
